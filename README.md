@@ -13,6 +13,7 @@ The second part is to gather and analyze data on the effectiveness of projects i
 ## Repository description
 
 `001_retrieve-data.R` - script for downloading data from Schola Empirica cloud.
+
 `002_read-data.R` - import raw data, fixes variable names, adds variable labels and exports as .rds files
 
 
