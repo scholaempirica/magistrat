@@ -1,0 +1,179 @@
+---
+title: "Kvantitativní zhodnocení projektů pro inkluzi ve školách"
+subtitle: "Výzva č. 28"
+author:
+- výzkumný tým SCHOLA EMPIRICA
+- "Aleš Vomáčka^[Korespondenční autor. Kontakt: vomacka@scholaempirica.org], Magdaléna Klimešová, Martina Koutná"
+date: '`r gsub("^0", "", format(Sys.time(), "%d. %B %Y"))`'
+output: 
+  reschola::schola_word:
+    fig_caption: yes
+    toc: no
+    number_sections: false
+abstract: Tento dokument popisuje vyhodnocení kvantitativních dat sebraných pro potřeby projektové žádosti Magistrátu Hlavního města Prahy číslo 28, zaměřené na inkluzi na školách. Data pochází z dotazníků Magistrátu, které byly distribuovány zapojeným školám na začátku a na konci projektu. Byla naměřená pozitivní změna, kvůli neexistenci referenční skupiny ovšem není možné interpretovat její věcnou významnost, ani určit, do jaké míry je jejím původem projekt samotný.
+toc-title: "Obsah zprávy"
+lang: cs # used for quotation marks
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(include = F) # by default, chunk code and output is hidden
+options(scipen = 10) # force R to show full numbers, not scientific notation
+
+library(reschola)
+library(tidyverse)
+library(scales)
+
+source("shared.R", local = TRUE) # helper functions and shared code
+
+set_reschola_ggplot_fonts() # make ggplot2 use Roboto fonts without you having to set it
+theme_set(theme_schola()) # default ggplot theme
+
+```
+
+```{r data-import}
+files = list.files(path = "data-processed", pattern = "(magistrat_call28_)*.rds", full.names = TRUE) #list of processed .rds files from the call 28
+
+df_list = lapply(files, readRDS) #reads in data into single list
+names(df_list) = str_replace(files, pattern = "(.+)_(.+).rds$", replacement = "\\2") #extracts names of the dataframe from their file paths and applies them to the list 
+
+list2env(df_list, envir = .GlobalEnv) #extracts data frames into the global environment
+```
+
+```{r tool-descriptives}
+q_elementary = elementary %>%
+  select(matches("(cul|cond|pract|rel)(.+)_w1$")) %>%
+  ncol() #number of items in elementary and highschool quesionnaire (they are identical)
+
+q_kindergarten = kindergarten %>%
+  select(matches("(cul|cond|pract|rel)(.+)_w1$")) %>%
+  ncol() #number of items in elementary and highschool quesionnaire (they are identical)
+```
+
+```{r sample-descriptives}
+
+#total number of respondents
+n_elementary = nrow(elementary) #number of respondents from elementary schools
+n_high = nrow(high) #number of respondents from high schools
+n_kindergarten = nrow(kindergarten) #number of respondents from kindergartens
+
+#number of responses in the second wave
+n_elementary_wave2 = sum(!is.na(elementary$total_score_w2))
+n_high_wave2 = sum(!is.na(high$total_score_w2))
+n_kindergarten_wave2 = sum(!is.na(kindergarten$total_score_w2))
+
+#response rate in the second wave
+res_rate_elementary = percent(n_elementary_wave2 / n_elementary, 1)
+res_rate_high = percent(n_high_wave2 / n_high, 1)
+res_rate_kindergarten = percent(n_kindergarten_wave2 / n_kindergarten, 1)
+```
+
+# Popis dotazníku a souboru respondentů
+
+Pro kvantitativní vyhodnocení projektové výzvy č. 28 pro inkluzi na školách byl využit dotazník vytvořený Magistrátem Hlavního města Prahy. Tento dotazník obsahoval `r q_elementary` otázek pro respondenty ze základních a středních škol a `r q_kindergarten` otázek pro respondenty ze školek. Otázky byly rozděleny do čtyř tématických okruhů: *Kultura*, *Podmínky,* *Praxe* a *Relace*. Na každou otázku bylo možno odpovědět jednou z možností *"rozhodně ano"* (3 body), *"spíše ano"* (2 body), *"spíše ne"* (1 bod) a *"rozhodně ne"* (0 bodů). V souladu s postupem zadavatele jsme dodrželi bodové hodnocení odpovědí, celkové skóre bylo ale spočítáno jako průměrná hodnota odpovědí, místo prostého součtu. Důvodem, je že dotazník pro mateřské školy měl o dvě položky méně, než dotazník pro základní a střední školy a teoretické maximum prostého součtového indexu tedy je o šest bodů nižší. Průměrový index tímto problémem netrpí.
+
+Dotazník vyplnilo `r n_kindergarten` respondentů ze školek, `r n_elementary` respondentů ze základních škol a `r n_high` ze středních škol a gymnázií. Každý respondent reprezentuje jednu škola a na každé škole probíhal právě jeden projekt. Podle plánu měl dotazník každý z respondentů vyplnit dvakrát - jednou před a jednou po průběhu projektu. Ne všechny projekty byly ovšem v době psaní této zprávy finalizované a celkový počet odpovědí z druhé vlny je tedy výrazně nižší, než z vlny první. Konkrétně, v mateřských školách se druhé vlny sběru dat zúčastnilo `r n_kindergarten_wave2` respondentů (tj. `r res_rate_kindergarten` z původního počtu), na základních školách vyplnilo dotazník dvakrát `r n_elementary_wave2` respondentů (`r res_rate_elementary` z původního počtu) a na středních školách vyplnili druhý dotazník `r n_high_wave2` respondenti (`r res_rate_high` z původního počtu). Vypovídací hodnota dat je tedy zvláště u středních škola a gymnázií velmi limitovaná.
+
+# Celkový počet bodů
+
+```{r total-scores-descriptives}
+#average of the mean total scores in the first wave
+score_elementary_mean_w1 = round( mean(elementary$mean_score_w1), 2)
+score_high_mean_w1 = round( mean(high$mean_score_w1), 2)
+score_kindergarten_mean_w1 = round( mean(kindergarten$mean_score_w1), 2)
+
+#median of the mean total scores in the first wave
+score_elementary_median_w1 = round( median(elementary$mean_score_w1), 2)
+score_high_median_w1 = round( median(high$mean_score_w1), 2)
+score_kindergarten_median_w1 = round( median(kindergarten$mean_score_w1), 2)
+
+#average of the mean total scores in the second wave
+score_elementary_mean_w2 = round(mean(elementary$mean_score_w2, na.rm = T), 2)
+score_high_mean_w2 = round(mean(high$mean_score_w2, na.rm = T), 2)
+score_kindergarten_mean_w2 = round(mean(kindergarten$mean_score_w2, na.rm = T), 2)
+
+#median of the mean total scores in the first wave
+score_elementary_median_w2 = round(median(elementary$mean_score_w2, na.rm = T), 2)
+score_high_median_w2 = round(median(high$mean_score_w2, na.rm = T), 2)
+score_kindergarten_median_w2 = round(median(kindergarten$mean_score_w2, na.rm = T), 2)
+```
+
+```{r score-differences}
+#differences in means between wave 1 and wave 2
+score_elementary_mean_diff = round( score_elementary_mean_w2 - score_elementary_mean_w1, 2)
+score_high_mean_diff = round( score_high_mean_w2 - score_high_mean_w1, 2)
+score_kindergarten_mean_diff = round( score_kindergarten_mean_w2 - score_kindergarten_mean_w1, 2)
+```
+
+```{r scores-w1-distr}
+#new tibble with just total scores per school level, wave 1
+total_scores_w1 = tibble(score = c(elementary$mean_score_w1,
+                                 high$mean_score_w1,
+                                 kindergarten$mean_score_w1),
+                      level = c(rep("Základní školy", nrow(elementary)),
+                                rep("Střední školy", nrow(high)),
+                                rep("Mateřské školy", nrow(kindergarten)) ) )
+
+#new tibble with just total scores per school level, wave 2
+total_scores_w2 = tibble(score = c(elementary$mean_score_w2,
+                                 high$mean_score_w2,
+                                 kindergarten$mean_score_w2),
+                      level = c(rep("Základní školy", nrow(elementary)),
+                                rep("Střední školy", nrow(high)),
+                                rep("Mateřské školy", nrow(kindergarten)) ) )
+
+agg_scores_w1 = total_scores_w1 %>%  group_by(level) %>% summarise(scores_w1 = mean(score, na.rm = T)) #data frame with means for all school levels for 1. wave
+
+agg_scores_w2 = total_scores_w2 %>%  group_by(level) %>% summarise(scores_w2 = mean(score, na.rm = T)) #data frame with means for all school levels for 2. wave
+
+#data frame with means for all school levels for both waves
+agg_scores_all = left_join(agg_scores_w1, agg_scores_w2, by = "level")
+```
+
+Celkový počet bodů pro respondenta byl spočítan jako prostý aritmetický průměr bodů za jednotlivé otázky, viz. předchozí kapitola. Minimální možná dosažitelná hodnota je 0 a maximální dosažitelná hodnota je 3. V první vlně byl průměr celkového skóre na mateřských školách `r score_kindergarten_mean_w1` bodů (medián byl `r score_kindergarten_median_w1` bodů), na základních školách byl průměr `r score_elementary_mean_w1` bodů (medián `r score_elementary_median_w1` bodů) a na středních školách byl průměr `r score_high_mean_w1` bodů (medián `r score_high_median_w1` bodů).
+
+Rozložení bodů v první vlně sběru dat je možné vidět v grafu \@ref(fig:scores-w1-boxplot). Tento graf zobrazuje celkový počet bodů podle typu školy. Každý bod reprezentuje jednoho respondenta a body byly náhodně horizontálně rozprostřené, aby nedocházlo k přílišnému překryvu. Grafem je také proložen boxplot pro lepší vizualizaci rozdělení jednotlivých skupin. Z grafu samotného je možná vyčíst, že rozdíly mezi typy škol byly na začátku projektu zanedbatelné. Dále je možné vidět, že většina respondentů se již před začátkem projektu pohybovala relativně blízko horní hranice škály a prostor pro zaznamenatelné zlepšení je tedy limitovaný.
+
+```{r scores-w1-boxplot, fig.cap= "Rozložení celkových bodů v 1. vlně", include=TRUE}
+#boxplot + scatterplot of mean scores in the first wave
+total_scores_w1 %>% ggplot(aes(x = level, y = score)) +
+  geom_boxplot(outlier.colour = NA) +
+  geom_jitter(height = 0, width = 0.2, alpha = 0.5, color = "grey60") +
+  scale_y_continuous(limits = c(0,3),
+                     labels = number_format(suffix = " b.",
+                                            accuracy = 1)) +
+  scale_x_discrete(limits = c("Mateřské školy", "Základní školy", "Střední školy"))
+```
+
+V druhé vlně sběru dat, která proběhla na konci projektu, byl průměr celkového skóre na mateřských školách `r score_kindergarten_mean_w2` bodů (medián byl `r score_kindergarten_median_w2` bodů), na základních školách byl průměr `r score_elementary_mean_w2` bodů (medián `r score_elementary_median_w2` bodů) a na středních školách byl průměr `r score_high_mean_w2` bodů (medián `r score_high_median_w2` bodů).
+
+Graf \@ref(fig:scores-change) zobrazuje rozdíl v průměrném počtu bodů v první a druhé vlně napříč různými stupni škol.Konkrétně, průměrný počet bodů u responentů z mateřských škol vzrostl o `r score_kindergarten_mean_diff` bodu, nárust průměrného počtu bodů u respondentů ze základních škol byl `r score_elementary_mean_diff` bodu a průměrný počet bodů na středních školách se zvyšil o `r score_high_mean_diff` bodu.
+
+```{r scores-change, fig.cap="Rozdíl v průměrnék počtu bodů v 1. a 2. vlně", include=TRUE}
+#caption for the line plot below
+change_fig_caption =  paste0("Počet respondentů v 1. vlně: mateřské školy - ",
+       n_kindergarten, ", základní školy - ",
+       n_elementary, ", střední školy - ",
+       n_high, "\nPočet respondentů v 2. vlně: mateřské školy -   ",
+       n_kindergarten_wave2, ", základní školy - ",
+       n_elementary_wave2, ", střední školy -   ",
+       n_high_wave2)
+
+#line comparing means across schools level between wave 1 and wave 2
+agg_scores_all %>% pivot_longer(cols = -level, names_to = "wave", values_to = "score") %>% 
+  mutate(wave = fct_recode(wave,
+                           "1. vlna" = "scores_w1",
+                           "2. vlna" = "scores_w2")) %>% 
+  ggplot(aes(x = wave, y = score, color = level)) +
+  geom_point() +
+  geom_line(aes(x = as.numeric(as.factor(wave)))) +
+  scale_y_continuous(limits = c(0,3),
+                     labels = number_format(suffix = " b.",
+                                            accuracy = 1)) +
+  labs(color = element_blank(), caption = change_fig_caption) +
+  theme(legend.position = "bottom",
+        plot.caption = element_text(hjust = 0))
+```
+
+Byla tedy naměřena pozitivní změna. Vzhledem k neexistenci kontrolní skupiny nebo populačních norem ovšem není možné zhodnotit, jestli jsou naměřené rozdíly prakticky významné (tzn. není možné říci, jestli jsou naměřené rozdíly "velké" nebo "malé"). Kvůli neexistenci kontrolní skupiny také není možné určit, do jaké míry jsou naměřené změny důsledkem proběhlých projektů a do jaké míry jsou důsledkem vnějších faktorů. Nakonec, zvláště u středních škol je problémem výrazně menší počet vyplněných dotazníků ve druhé vlně (pouze `r n_high_wave2` z původních `r n_high`).
+
+Při interpretaci je tedy nutné mít na paměti, že pozorované rozdíly v celkovém počtu bodů na začátku a na konci projektu jsou důsledkem blíže nezmapovatelných vlivů projektu samotného, neměřených vnějších faktorů a potencionálně i rozdílů ve složení vzorku v první a druhé vlně.

@@ -16,6 +16,13 @@ The second part is to gather and analyze data on the effectiveness of projects i
 
 `002_read-data.R` - import raw data, fixes variable names, adds variable labels and exports as .rds files
 
+`003_check-and-process-data.R` - computes mean scores for both waves
+
+`01_quantitative_report_call_28.Rmd` - report on the quantitative data from the first part of the project, project call no. 28
+
+`shared.R` - custom based function for the project
+
+`build.R` - rebuilds everything from the scratch. Run to reproduce the entire analysis
 
 ## Packages needed for this project
 

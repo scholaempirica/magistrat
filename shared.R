@@ -7,3 +7,16 @@
 # Store those in .Renviron. usethis::edit_r_environ() opens it for you for editing.
 project_title <- "Magistrat_28_54"
 gd_url <- "https://drive.google.com/drive/u/0/folders/1GnO6kVEYM7nAnlFPmw66YWWAhGPCz30M"
+
+
+# Compute row mean scores -----------------------------------------------------
+#this function takes a data frame or a tibble (data) computes mean scores for items selected based on regex (regex_match),
+#stores the index into new variable (output_var) and returns tibble. Requires dplyr and rlang installed
+
+compute_row_score = function(data, regex_match, output_var) {
+  data %>%
+    dplyr::rowwise() %>%
+    mutate(!!rlang::ensym(output_var) := mean(dplyr::c_across(dplyr::matches(regex_match)), na.rm = TRUE) ) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(!!rlang::ensym(output_var) := ifelse(is.nan(!!rlang::ensym(output_var)), NA, !!rlang::ensym(output_var) ))
+}
