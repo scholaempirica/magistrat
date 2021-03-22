@@ -6,6 +6,8 @@ library(here)
 source("shared.R", local = TRUE)
 
 files = list.files(path = "data-processed", pattern = "(magistrat_call28_)*.rds", full.names = TRUE) #list of processed .rds files from the call 28
+files = grep(x = files, pattern = "marks", invert = TRUE, value = TRUE) #removes files paths to school marks data
+
 df_list = lapply(files, readRDS) #reads in data into single list
 
 names(df_list) = str_replace(files, pattern = "(.+)_(.+).rds$", replacement = "\\2") #extracts names of the data frame from their file paths and applies them to the list

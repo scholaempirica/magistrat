@@ -3,11 +3,11 @@
 # it contains the commands needed to rebuild the whole project from scratch.
 # Typically, those will be source() or rmarkdown::render() calls, like below.
 
-source("001_retrieve-data.R", local = TRUE)
-source('002_read-data-teachers.R', local = TRUE)
-source('002_read-data-marks.R', local = TRUE)
-source('003_check-and-process-data-teachers.R', local = TRUE)
-source('003_check-and-process-data-marks.R', local = TRUE)
+source("001_retrieve-data.R", local = TRUE, encoding = "UTF-8")
+source('002_read-data-teachers.R', local = TRUE, encoding = "UTF-8")
+source('002_read-data-marks.R', local = TRUE, encoding = "UTF-8")
+source('003_check-and-process-data-teachers.R', local = TRUE, encoding = "UTF-8")
+source('003_check-and-process-data-marks.R', local = TRUE, encoding = "UTF-8")
 rmarkdown::render('01_quantitative_report_call_28.Rmd', output_dir = 'reports-output')
 
 

@@ -22,6 +22,7 @@ options(scipen = 10) # force R to show full numbers, not scientific notation
 library(reschola)
 library(tidyverse)
 library(scales)
+library(here)
 
 source("shared.R", local = TRUE) # helper functions and shared code
 
@@ -31,12 +32,18 @@ theme_set(theme_schola()) # default ggplot theme
 ```
 
 ```{r data-import}
-files = list.files(path = "data-processed", pattern = "(magistrat_call28_)*.rds", full.names = TRUE) #list of processed .rds files from the call 28
+# Teachers questionnaire data
+files = list.files(path = "data-processed", pattern = "magistrat_call28_.+.rds", full.names = TRUE) #list of processed .rds files from the call 28
+teachers_list = grep(files, pattern = "marks", invert = TRUE, value = TRUE)
 
-df_list = lapply(files, readRDS) #reads in data into single list
-names(df_list) = str_replace(files, pattern = "(.+)_(.+).rds$", replacement = "\\2") #extracts names of the dataframe from their file paths and applies them to the list 
+teachers = lapply(teachers_list, readRDS) #reads in data into single list
+names(teachers) = str_replace(teachers_list, pattern = "(.+)_(.+).rds$", replacement = "\\2") #extracts names of the dataframe from their file paths and applies them to the list 
 
-list2env(df_list, envir = .GlobalEnv) #extracts data frames into the global environment
+list2env(teachers, envir = .GlobalEnv) #extracts data frames into the global environment
+remove(teachers)
+
+# schools marks data
+marks = read_rds(here("data-processed", "magistrat_call28_marks_merged.rds"))
 ```
 
 ```{r tool-descriptives}

@@ -5,6 +5,7 @@ library(here) #dynamic file paths
 library(labelled) #variable labels
 
 files = list.files(path = "data-input", pattern = "(magistrat_call28_)*.csv", full.names = TRUE) #list of .csv files from the call 28
+files = grep(x = files, pattern = "marks", invert = TRUE, value = TRUE)
 
 df_list = lapply(files, read.csv2, encoding = "UTF-8") #reads in data into single list
 names(df_list) = str_replace(files, pattern = "(.+)_(.+).csv$", replacement = "\\2") #extracts names of the data frame from their file paths and applies them to the list

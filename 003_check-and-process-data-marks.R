@@ -4,7 +4,8 @@ library(tidyverse)
 library(here)
 library(labelled)
 
-files = list.files(path = "data-processed", pattern = "magistrat_call28_marks_.+.rds", full.names = TRUE) #list of .csv files from with school marks the call 28
+files = list.files(path = "data-processed", pattern = "magistrat_call28_marks.+.rds", full.names = TRUE) #list of .csv files from with school marks the call 28
+files = grep(x = files, pattern = "merged", invert = TRUE, value = TRUE)
 df_list = lapply(files, read_rds) #reads in data into single list
 
 df_list[[2]]$id = as.character(df_list[[2]]$id) #changes ids in Kvetneho vitezstvi to characters, so that they can be merged with the rest
