@@ -80,7 +80,7 @@ Pro kvantitativní vyhodnocení projektové výzvy č. 28 pro inkluzi na školá
 
 Dotazník vyplnilo `r n_kindergarten` respondentů ze školek, `r n_elementary` respondentů ze základních škol a `r n_high` ze středních škol a gymnázií. Každý respondent reprezentuje jednu škola a na každé škole probíhal právě jeden projekt. Podle plánu měl dotazník každý z respondentů vyplnit dvakrát - jednou před a jednou po průběhu projektu. Ne všechny projekty byly ovšem v době psaní této zprávy finalizované a celkový počet odpovědí z druhé vlny je tedy výrazně nižší, než z vlny první. Konkrétně, v mateřských školách se druhé vlny sběru dat zúčastnilo `r n_kindergarten_wave2` respondentů (tj. `r res_rate_kindergarten` z původního počtu), na základních školách vyplnilo dotazník dvakrát `r n_elementary_wave2` respondentů (`r res_rate_elementary` z původního počtu) a na středních školách vyplnili druhý dotazník `r n_high_wave2` respondenti (`r res_rate_high` z původního počtu). Vypovídací hodnota dat je tedy zvláště u středních škola a gymnázií velmi limitovaná.
 
-# Celkový počet bodů
+# Celkový počet bodů pedagogů
 
 ```{r total-scores-descriptives}
 #average of the mean total scores in the first wave
@@ -184,3 +184,63 @@ agg_scores_all %>% pivot_longer(cols = -level, names_to = "wave", values_to = "s
 Byla tedy naměřena pozitivní změna. Vzhledem k neexistenci kontrolní skupiny nebo populačních norem ovšem není možné zhodnotit, jestli jsou naměřené rozdíly prakticky významné (tzn. není možné říci, jestli jsou naměřené rozdíly "velké" nebo "malé"). Kvůli neexistenci kontrolní skupiny také není možné určit, do jaké míry jsou naměřené změny důsledkem proběhlých projektů a do jaké míry jsou důsledkem vnějších faktorů. Nakonec, zvláště u středních škol je problémem výrazně menší počet vyplněných dotazníků ve druhé vlně (pouze `r n_high_wave2` z původních `r n_high`).
 
 Při interpretaci je tedy nutné mít na paměti, že pozorované rozdíly v celkovém počtu bodů na začátku a na konci projektu jsou důsledkem blíže nezmapovatelných vlivů projektu samotného, neměřených vnějších faktorů a potencionálně i rozdílů ve složení vzorku v první a druhé vlně.
+
+# Školní známky
+
+```{r marks-descriptives}
+marks_comp = marks %>% group_by(id) %>%
+  mutate(n = n()) %>% 
+  ungroup() %>% 
+  filter(n > 1) %>% 
+  group_by(school, year) %>% 
+  summarise(across( c(mark_czech_lang, mark_maths, average_marks),
+                    ~mean(., na.rm = TRUE))) #summarize marks by subject, only for children measured at least twice
+
+marks_n = marks %>% group_by(id) %>%
+  mutate(n = n()) %>% 
+  ungroup() %>% 
+  filter(n > 1) %>% group_by(school) %>% summarise(n = n())
+
+marks_comp = left_join(marks_comp, marks_n, by = "school") %>% mutate(school = paste0(school, " (", n, " žáků)"))
+
+#number of repeatedly measured students
+n_hostivar = marks_n[marks_n$school == "Hostivař",]$n
+n_kvetnoveho = marks_n[marks_n$school == "Květnového vítězství",]$n
+```
+
+Dvě školy poskytly známky svých žáků s odlišným mateřským jazykem, a to Základní škola Hostivař a ZŠ a MŠ Květného vítězství.
+Konkrétně, na ZŠ Hostivař bylo do projektu zapojeno `r n_hostivar` žáků s OMJ, zatímco na ZŠ Květnového vítězství `r n_kvetnoveho` žáků (počítáme přitom pouze žáky, kteří byli zapojeni po celou dobu).
+Pro každého žáka byla zaznamenána známka na vysvědčení z Českého jazyka, matematiky a dále poté průměr všech předmětů.
+Průměrné známky pro obě školy a jejich posun v čase je možné vidět na grafu \@ref(fig:marks-plot) níže.
+
+```{r marks-plot, fig.cap= "Známky žáků s OMJ na konci roku podle předmětu", include=TRUE}
+marks_comp %>% pivot_longer(cols = contains("mark")) %>% 
+  mutate(name = recode(name,
+                       mark_czech_lang = "Český jazyk",
+                       mark_maths = "Matematika",
+                       average_marks = "Průměr všech předmětů")) %>% 
+  ggplot(aes(x = year, y = value, color = name)) +
+  facet_wrap(~school) +
+  geom_line() +
+  geom_point() +
+  scale_y_continuous(trans = reverse_trans(), limits = c(5,1)) +
+  scale_x_continuous(breaks = c(2018, 2020)) +
+  labs(color = element_blank(),
+       y = "Známa na vysvědčení v 2. pololetí",
+       x = element_blank()) +
+  theme_schola(multiplot = TRUE, axis.title = element_text()) +
+  theme(legend.position = c(0.85, 0.15))
+```
+
+Z grafu je patrné, že na ZŠ Hostivař měli žáci již na začátku projektu poměrně vysoký průměr ze všech předmětů a v průběhu času došlo pouze k nepatrnému posunu.
+Na druhou stranu, na ZŠ Květnového vítězství měli žáci s OMJ na začátku projektu výrazně nižší školní průměr z češtiny oproti ostatím předmětům, v průběhu posledních dvou let ale došlo ke zlepšení.
+Během té samé doby také klesl jejich průměr známek z matematiky.
+
+Na tomto místě je nutné zmínit, že analýza školních známek není přímočará záležitost.
+Školní známky nejsou standardizovanou metrikou pro hodnocení výkonu a to, jaké známky dítě dostane, může do velké míry záviset na učiteli a škole, na které žák studuje žák studuje.
+Porovnávat proto známky žáků napříč školami proto vyžaduje velkou opatrnost.
+Význam známek se také mění v čase.
+V nižších ročnících může být hodnocení žáků založeno na jiných kritériích, než v ročnících vyšších a porovnání dvě známky udělené s odstupem let, byť stejnému žákovi, proto mohou vypovídat o výrazně odlišných vlastnostech.
+
+K analýze známek je proto přistupovat velmi obezřetně a zobecnitelnost závěrů je omezená.
+I přes tyto problémy je ovšem možné říci, že alespoň na ZŠ Květnového vítězství začaly být na konci projektu znalosti češtiny žáků s OMJ hodnoceny výrazně lépe, než tomu bylo na začátku.
